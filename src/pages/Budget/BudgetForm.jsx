@@ -20,10 +20,8 @@ const BudgetForm = props => {
 
 	useEffect(() => {
 		const transactions = props.budgetData.transactions;
-		const income = props.budgetSettings.income;
-		const outgoing = props.budgetSettings.outgoing;
 
-		const total = calculateBalance(income, outgoing, transactions);
+		const total = calculateBalance(transactions);
 		setBalance(total);
 	}, [props.budgetData]);
 
@@ -35,9 +33,9 @@ const BudgetForm = props => {
 		props.setMonth(inputMonth.current.value);
 	};
 
-	const calculateBalance = (income, outgoing, transactions) => {
-		income ||= 0;
-		outgoing ||= 0;
+	const calculateBalance = transactions => {
+		const income = parseInt(inputIncome.current.value) || 0;
+		const outgoing = parseInt(inputOutgoing.current.value || 0);
 		transactions ||= [];
 
 		let expenses = 0;
@@ -68,7 +66,7 @@ const BudgetForm = props => {
 			body: { income: income, outgoing: outgoing },
 		});
 
-		const total = calculateBalance(income, outgoing, transactions);
+		const total = calculateBalance(transactions);
 		setBalance(total);
 	};
 
@@ -102,6 +100,7 @@ const BudgetForm = props => {
 						name="value"
 						ref={inputValue}
 						placeholder="10"
+						autoComplete="off"
 					/>
 				</div>
 				<input
@@ -109,6 +108,7 @@ const BudgetForm = props => {
 					name="name"
 					ref={inputName}
 					placeholder="Chocolate Cake"
+					autoComplete="off"
 				/>
 				<button type="submit">
 					<IoIosAdd /> <span>Add</span>
@@ -129,6 +129,7 @@ const BudgetForm = props => {
 						defaultValue={props.budgetSettings.income}
 						placeholder={props.budgetSettings.defaultIncome}
 						onChange={handlerSettingsUpdate}
+						autoComplete="off"
 					/>
 				</div>
 				<div className={classes.outgoing}>
@@ -144,6 +145,7 @@ const BudgetForm = props => {
 						defaultValue={props.budgetSettings.outgoing}
 						placeholder={props.budgetSettings.defaultOutgoing}
 						onChange={handlerSettingsUpdate}
+						autoComplete="off"
 					/>
 				</div>
 				<div className={classes.balance}>

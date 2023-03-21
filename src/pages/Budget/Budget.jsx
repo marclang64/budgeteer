@@ -98,6 +98,7 @@ const Budget = () => {
 		});
 	};
 
+	// remove transaction handler
 	const handlerRemoveTransaction = id => {
 		fetchDataRemove(null, {
 			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}/budget/${year}/${month}/transactions/${id}.json`,

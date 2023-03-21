@@ -4,8 +4,11 @@ import useFetch from '@hooks/useFetch';
 
 import { Form, Input, Button } from '@components/Form/';
 
+import classes from './SettingsForm.module.scss';
+
 const SettingsForm = () => {
 	const authCtx = useContext(AuthContext);
+	const [formSubmitted, setFormSubmitted] = useState(false);
 	const [isLoading, error, fetchData] = useFetch();
 	const [isLoadingUpdate, errorUpdate, fetchDataUpdate] = useFetch();
 	const [settings, setSettings] = useState({});
@@ -26,9 +29,10 @@ const SettingsForm = () => {
 		fetchData(transformData, {
 			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}.json`,
 		});
-	}, []);
+	}, [fetchData, formSubmitted]);
 
-	const handlerSubmit = () => {
+	const handlerSubmit = e => {
+		e.preventDefault();
 		authCtx.authorize();
 
 		const income = parseInt(inputIncome.current.value);
@@ -43,10 +47,17 @@ const SettingsForm = () => {
 			},
 			body: { defaultIncome: income, defaultOutgoing: outgoing },
 		});
+
+		setFormSubmitted(true);
 	};
 
 	return (
 		<Form onSubmit={handlerSubmit}>
+			{formSubmitted ? (
+				<div className={classes.message}>
+					Settings updated successfully
+				</div>
+			) : null}
 			<Input
 				label="Monthly Income"
 				type="text"

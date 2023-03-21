@@ -16,7 +16,9 @@ const Home = () => {
 	}, []);
 
 	return (
-		<Page title="Login">{!authCtx.isLoggedIn ? <LoginForm /> : null}</Page>
+		<Page title="Budgeteer / Login">
+			{!authCtx.isLoggedIn ? <LoginForm /> : null}
+		</Page>
 	);
 };
 

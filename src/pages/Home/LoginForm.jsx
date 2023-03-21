@@ -56,6 +56,7 @@ const LoginForm = () => {
 				name="username"
 				ref={usernameInput}
 				required
+				autoComplete="off"
 			/>
 			<Input
 				label="Password"

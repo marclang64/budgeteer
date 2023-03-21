@@ -1,0 +1,46 @@
+.item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	position: relative;
+	padding: 15px;
+	margin-top: 15px;
+	border-bottom: 1px solid var(--color-grey-dark);
+
+	.value {
+		width: calc(30% - 20px);
+	}
+
+	.name {
+		width: 100%;
+	}
+
+	.remove {
+		font-size: 20px;
+		cursor: pointer;
+		height: 20px;
+		color: var(--color-grey-light);
+
+		&:hover {
+			color: var(--color-white);
+		}
+	}
+
+	&:last-child {
+		border-bottom: 0;
+	}
+
+	@media screen and (max-width: 600px) {
+		.value {
+			width: 40%;
+		}
+
+		.name {
+			text-align: right;
+		}
+
+		.remove {
+			margin-left: 10px;
+		}
+	}
+}

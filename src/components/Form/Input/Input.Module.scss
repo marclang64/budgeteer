@@ -1,0 +1,45 @@
+.inputcontainer {
+	width: 100%;
+	position: relative;
+	margin-top: 15px;
+
+	.label {
+		position: relative;
+		display: inline-block;
+		top: -35px;
+		left: 0px;
+		line-height: 16px;
+		pointer-events: none;
+		transition: all 0.2s ease;
+		z-index: 10;
+		color: var(--color-white);
+	}
+
+	.input {
+		position: relative;
+		display: inline-block;
+		width: 100%;
+		height: 45px;
+		padding: 0;
+		background-color: transparent;
+		border: 0;
+		border-bottom: 1px solid var(--color-white);
+		outline: none;
+		font-size: inherit;
+		font-family: inherit;
+		font-weight: inherit;
+		transition: all ease 400ms;
+
+		&:focus {
+			border-bottom: 1px solid var(--color-highlight);
+		}
+
+		&:focus ~ .label,
+		&:required:valid ~ .label,
+		&:not(:placeholder-shown) ~ .label {
+			top: -60px;
+			font-size: 14px;
+			color: var(--color-highlight);
+		}
+	}
+}

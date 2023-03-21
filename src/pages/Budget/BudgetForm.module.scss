@@ -1,0 +1,198 @@
+.budgetform {
+	display: flex;
+	flex-wrap: wrap;
+
+	.inputfields {
+		width: 100%;
+		display: flex;
+		order: 1;
+		background-color: var(--color-grey-dark);
+		border-radius: 5px;
+		padding: 15px;
+		margin: 20px 0;
+		box-shadow: inset 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
+
+		.value {
+			display: flex;
+			width: 30%;
+
+			span {
+				align-self: center;
+			}
+		}
+
+		button {
+			display: flex;
+			padding: 5px 10px 5px 5px;
+			border: 0;
+			border-radius: 5px;
+			background-color: var(--color-grey);
+			color: var(--color-white);
+			cursor: pointer;
+			font-size: 30px;
+			line-height: 20px;
+
+			span {
+				font-size: 16px;
+				line-height: 30px;
+			}
+		}
+	}
+
+	.periodselect {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: end;
+		align-items: baseline;
+		width: 30%;
+		gap: 15px;
+		font-size: 14px;
+	}
+
+	.calculator {
+		display: flex;
+		flex-wrap: wrap;
+		width: 70%;
+
+		.income,
+		.outgoing,
+		.balance {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			line-height: 20px;
+
+			label {
+				font-size: 14px;
+				margin-right: 5px;
+				color: var(--color-grey-light);
+
+				svg {
+					display: none;
+					margin-bottom: -2px;
+					margin-right: 5px;
+				}
+			}
+
+			span {
+				font-size: 14px;
+			}
+
+			input[type='number'] {
+				font-size: 14px;
+				padding: 0;
+				width: 45px;
+			}
+		}
+
+		.income {
+			label {
+				svg {
+					margin-right: 1px;
+				}
+			}
+		}
+
+		.balance {
+			label {
+				svg {
+					margin-right: 6px;
+				}
+			}
+			.amount {
+				font-size: 14px;
+			}
+		}
+	}
+
+	input[type='text'],
+	input[type='number'] {
+		display: block;
+		padding: 10px;
+		border: 0;
+		margin-right: 15px;
+		width: 100%;
+
+		&::placeholder {
+			color: var(--color-grey-light);
+		}
+	}
+
+	input[type='number'] {
+		-moz-appearance: textfield;
+	}
+
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	select {
+		appearance: auto;
+		text-align: right;
+		background-color: var(--color-grey);
+		cursor: pointer;
+	}
+
+	@media screen and (max-width: 700px) {
+		.inputfields {
+			margin-top: 15px;
+			order: 1;
+		}
+
+		.periodselect {
+			width: 100%;
+			order: 0;
+		}
+
+		.calculator {
+			width: 100%;
+			order: 2;
+
+			justify-content: space-between;
+			background-color: var(--color-grey-dark);
+			border-radius: 5px;
+			padding: 10px 15px;
+			box-shadow: inset 0px 0px 8px 0px rgba(0, 0, 0, 0.2);
+
+			.income,
+			.outgoing,
+			.balance {
+				label {
+					svg {
+						display: block;
+					}
+
+					span {
+						display: none;
+					}
+				}
+			}
+		}
+	}
+
+	@media screen and (max-width: 600px) {
+		.inputfields {
+			align-items: center;
+
+			.value {
+				width: 40%;
+			}
+
+			input {
+				margin-right: 0;
+			}
+
+			button {
+				padding: 5px;
+				font-size: 25px;
+				height: 35px;
+
+				span {
+					display: none;
+				}
+			}
+		}
+	}
+}

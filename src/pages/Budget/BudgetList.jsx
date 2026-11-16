@@ -1,27 +1,10 @@
-import { useState, useEffect } from 'react';
-
 import BudgetListItem from './BudgetListItem';
-
 import classes from './BudgetList.module.scss';
 
-const BudgetList = props => {
-	const [transactions, setTransactions] = useState([]);
-
-	useEffect(() => {
-		const loadedTransactions = [];
-		const transactionsData = props.budgetData['transactions'];
-
-		for (const key in transactionsData) {
-			loadedTransactions.push({
-				id: key,
-				name: transactionsData[key]['name'],
-				value: transactionsData[key]['value'],
-			});
-		}
-
-		setTransactions(loadedTransactions);
-	}, [props]);
-
+const BudgetList = ({ budgetData, removeTransaction }) => {
+	const transactions = Object.entries(budgetData.transactions || {}).map(
+		([id, data]) => ({ id, ...data }),
+	);
 	return (
 		<div className={classes.budgetlist}>
 			{transactions.map(transaction => (
@@ -29,11 +12,10 @@ const BudgetList = props => {
 					key={transaction.id}
 					id={transaction.id}
 					data={transaction}
-					removeTransaction={props.removeTransaction}
+					removeTransaction={removeTransaction}
 				/>
 			))}
 		</div>
 	);
 };
-
 export default BudgetList;

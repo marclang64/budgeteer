@@ -1,81 +1,52 @@
-import { useState, useEffect, useRef, useContext } from 'react';
-import AuthContext from '@context/auth-context';
-import useFetch from '@hooks/useFetch';
-
+import { useState } from 'react';
+import { readBudget, saveBudget, resetBudget } from '@utils/localBudget';
 import { Form, Input, Button } from '@components/Form/';
-
 import classes from './SettingsForm.module.scss';
 
 const SettingsForm = () => {
-	const authCtx = useContext(AuthContext);
-	const [formSubmitted, setFormSubmitted] = useState(false);
-	const [isLoading, error, fetchData] = useFetch();
-	const [isLoadingUpdate, errorUpdate, fetchDataUpdate] = useFetch();
-	const [settings, setSettings] = useState({});
-	const inputIncome = useRef();
-	const inputOutgoing = useRef();
+  const [defaults, setDefaults] = useState(() => readBudget());
+  const [saved, setSaved] = useState(false);
 
-	useEffect(() => {
-		authCtx.authorize();
+  const update = (key, value) => {
+    setDefaults(previous => ({ ...previous, [key]: value }));
+    setSaved(false);
+  };
 
-		// callback for fetched data
-		const transformData = data => {
-			const defaultIncome = data.defaultIncome || 0;
-			const defaultOutgoing = data.defaultOutgoing || 0;
+  const submit = event => {
+    event.preventDefault();
+    const next = {
+      ...readBudget(),
+      defaultIncome: Number(defaults.defaultIncome) || 0,
+      defaultOutgoing: Number(defaults.defaultOutgoing) || 0,
+    };
+    saveBudget(next);
+    setDefaults(next);
+    setSaved(true);
+  };
 
-			setSettings({ income: defaultIncome, outgoing: defaultOutgoing });
-		};
+  const reset = () => {
+    if (!window.confirm('Delete all locally saved budgets and settings?')) return;
+    resetBudget();
+    setDefaults(readBudget());
+    setSaved(false);
+  };
 
-		fetchData(transformData, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}.json`,
-		});
-	}, [fetchData, formSubmitted]);
-
-	const handlerSubmit = e => {
-		e.preventDefault();
-		authCtx.authorize();
-
-		const income = parseInt(inputIncome.current.value);
-		const outgoing = parseInt(inputOutgoing.current.value);
-
-		// add transactions handler
-		fetchDataUpdate(() => {}, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}.json`,
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: { defaultIncome: income, defaultOutgoing: outgoing },
-		});
-
-		setFormSubmitted(true);
-	};
-
-	return (
-		<Form onSubmit={handlerSubmit}>
-			{formSubmitted ? (
-				<div className={classes.message}>
-					Settings updated successfully
-				</div>
-			) : null}
-			<Input
-				label="Monthly Income"
-				type="text"
-				name="income"
-				ref={inputIncome}
-				defaultValue={settings.income}
-			/>
-			<Input
-				label="Monthly Expenses"
-				type="text"
-				name="outoing"
-				ref={inputOutgoing}
-				defaultValue={settings.outgoing}
-			/>
-
-			<Button type="submit">Save</Button>
-		</Form>
-	);
+  return <div className={classes.settings}>
+    <Form onSubmit={submit}>
+      <div className={classes.fields}>
+        <Input label="Monthly Income" type="number" min="0" step="0.01"
+          value={defaults.defaultIncome ?? 0} onChange={event => update('defaultIncome', event.target.value)} required />
+        <Input label="Monthly Expenses" type="number" min="0" step="0.01"
+          value={defaults.defaultOutgoing ?? 0} onChange={event => update('defaultOutgoing', event.target.value)} required />
+      </div>
+      {saved && <p className={classes.message} role="status">Settings updated successfully</p>}
+      <Button type="submit">Save</Button>
+    </Form>
+    <div className={classes.demoControls}>
+      <p>Demo data is stored only in this browser.</p>
+      <Button type="button" style="secondary" onClick={reset}>Reset all demo data</Button>
+    </div>
+  </div>;
 };
 
 export default SettingsForm;

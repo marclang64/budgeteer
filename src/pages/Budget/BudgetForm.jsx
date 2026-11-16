@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef, useContext } from 'react';
-import AuthContext from '@context/auth-context';
-import useFetch from '@hooks/useFetch';
+import { useRef } from 'react';
 
 import { IoIosAdd } from 'react-icons/io';
 import { RxEnter, RxExit } from 'react-icons/rx';
@@ -8,22 +6,12 @@ import { FaBalanceScale } from 'react-icons/fa';
 import classes from './BudgetForm.module.scss';
 
 const BudgetForm = props => {
-	const authCtx = useContext(AuthContext);
-	const [isLoading, error, fetchData] = useFetch();
-	const [balance, setBalance] = useState(0);
 	const inputYear = useRef();
 	const inputMonth = useRef();
 	const inputName = useRef();
 	const inputValue = useRef();
 	const inputIncome = useRef();
 	const inputOutgoing = useRef();
-
-	useEffect(() => {
-		const transactions = props.budgetData.transactions;
-
-		const total = calculateBalance(transactions);
-		setBalance(total);
-	}, [props.budgetData]);
 
 	const handlerSetYear = () => {
 		props.setYear(inputYear.current.value);
@@ -34,52 +22,29 @@ const BudgetForm = props => {
 	};
 
 	const calculateBalance = transactions => {
-		const income = parseInt(inputIncome.current.value) || 0;
-		const outgoing = parseInt(inputOutgoing.current.value || 0);
-		transactions ||= [];
-
-		let expenses = 0;
-
-		for (const key in transactions) {
-			expenses += parseInt(transactions[key].value);
-		}
-
-		let total = income - outgoing - expenses;
-		total = total < 0 ? `-$${Math.abs(total)}` : `$${total}`;
-		return total;
+		const income = Number(props.budgetSettings.income) || 0;
+		const outgoing = Number(props.budgetSettings.outgoing) || 0;
+		const expenses = Object.values(transactions || {}).reduce(
+			(sum, transaction) => sum + (Number(transaction.value) || 0), 0
+		);
+		const total = Math.round((income - outgoing - expenses) * 100) / 100;
+		return `${total < 0 ? '-' : ''}$${Math.abs(total).toFixed(2)}`;
 	};
 
-	const handlerSettingsUpdate = () => {
-		const income = parseInt(inputIncome.current.value);
-		const outgoing = parseInt(inputOutgoing.current.value);
-		const transactions = props.budgetData.transactions;
-		const year = props.currYear;
-		const month = props.currMonth;
-
-		// add transactions handler
-		fetchData(() => {}, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}/budget/${year}/${month}.json`,
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: { income: income, outgoing: outgoing },
-		});
-
-		const total = calculateBalance(transactions);
-		setBalance(total);
-	};
+	const balance = calculateBalance(props.budgetData.transactions);
+	const handlerIncomeUpdate = e => props.updateAmounts(Number(e.target.value), Number(props.budgetSettings.outgoing) || 0);
+	const handlerOutgoingUpdate = e => props.updateAmounts(Number(props.budgetSettings.income) || 0, Number(e.target.value));
 
 	const handlerSubmit = e => {
 		e.preventDefault();
 		const year = inputYear.current.value;
 		const month = inputMonth.current.value;
 		const name = inputName.current.value;
-		const value = parseInt(inputValue.current.value);
+		const value = Number(inputValue.current.value);
 
-		if (year && month && name && value) {
+		if (year && month && name.trim() && Number.isFinite(value) && value > 0) {
 			const newTransaction = {
-				name: name,
+				name: name.trim(),
 				value: value,
 			};
 
@@ -100,6 +65,7 @@ const BudgetForm = props => {
 						name="value"
 						ref={inputValue}
 						placeholder="10"
+						min="0.01" step="0.01" required
 						autoComplete="off"
 					/>
 				</div>
@@ -108,6 +74,7 @@ const BudgetForm = props => {
 					name="name"
 					ref={inputName}
 					placeholder="Chocolate Cake"
+						required maxLength="120"
 					autoComplete="off"
 				/>
 				<button type="submit">
@@ -125,10 +92,11 @@ const BudgetForm = props => {
 					<input
 						type="number"
 						name="income"
+						min="0" step="0.01"
 						ref={inputIncome}
-						defaultValue={props.budgetSettings.income}
+						value={props.budgetSettings.income}
 						placeholder={props.budgetSettings.defaultIncome}
-						onChange={handlerSettingsUpdate}
+						onChange={handlerIncomeUpdate}
 						autoComplete="off"
 					/>
 				</div>
@@ -141,10 +109,11 @@ const BudgetForm = props => {
 					<input
 						type="number"
 						name="outgoing"
+						min="0" step="0.01"
 						ref={inputOutgoing}
-						defaultValue={props.budgetSettings.outgoing}
+						value={props.budgetSettings.outgoing}
 						placeholder={props.budgetSettings.defaultOutgoing}
-						onChange={handlerSettingsUpdate}
+						onChange={handlerOutgoingUpdate}
 						autoComplete="off"
 					/>
 				</div>

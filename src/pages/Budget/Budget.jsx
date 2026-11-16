@@ -1,114 +1,77 @@
-import { useState, useEffect, useContext } from 'react';
-import AuthContext from '@context/auth-context';
-import useFetch from '@hooks/useFetch';
-
+import { useState, useEffect } from 'react';
 import { Page } from '@components/Layout/';
+import { readBudget, saveBudget } from '@utils/localBudget';
 import BudgetForm from './BudgetForm';
 import BudgetList from './BudgetList';
-
-import { AiOutlineLogout } from 'react-icons/ai';
 import { IoSettingsOutline } from 'react-icons/io5';
 
 const Budget = () => {
-	// get year and month
-	const currYear = new Date().getFullYear().toString();
-	const currMonthInc = new Date().getMonth() + 1;
-	const currMonth = currMonthInc.toString().padStart(2, '0');
-
-	const authCtx = useContext(AuthContext);
-	const [isLoading, error, fetchData] = useFetch();
-	const [isLoadingAdd, errorAdd, fetchDataAdd] = useFetch();
-	const [isLoadingRemove, errorRemove, fetchDataRemove] = useFetch();
-	const [budgetData, setBudgetData] = useState({});
-	const [budgetPeriods, setBudgetPeriods] = useState([]);
-	const [budgetSettings, setBudgetSettings] = useState({});
-	const [year, setYear] = useState(currYear);
-	const [month, setMonth] = useState(currMonth);
+	const today = new Date();
+	const [year, setYear] = useState(String(today.getFullYear()));
+	const [month, setMonth] = useState(
+		String(today.getMonth() + 1).padStart(2, '0'),
+	);
+	const [data, setData] = useState(readBudget);
 
 	useEffect(() => {
-		authCtx.authorize();
-
-		// callback for fetched data
-		const transformData = data => {
-			const budget = data.budget;
-			const loadedBudgetPeriods = [];
-			const defaultIncome = data.defaultIncome || 0;
-			const defaultOutgoing = data.defaultOutgoing || 0;
-			let monthIncome, monthOutgoing;
-			let loadedBudgetData = {};
-
-			for (const key in budget) {
-				// set periods with existing data
-				loadedBudgetPeriods.push(key);
-
-				// set transactions for current period
-				if (key === year && budget[key][month]) {
-					loadedBudgetData = budget[key][month];
-
-					monthIncome = budget[key][month].income;
-					monthOutgoing = budget[key][month].outgoing;
-				}
-			}
-
-			// set current year initial period data
-			if (!loadedBudgetPeriods.includes('2023')) {
-				loadedBudgetPeriods.push('2023');
-			}
-
-			setBudgetPeriods(loadedBudgetPeriods);
-			setBudgetData(loadedBudgetData);
-			setBudgetSettings({
-				income: monthIncome || defaultIncome,
-				outgoing: monthOutgoing || defaultOutgoing,
-				defaultIncome: defaultIncome || 0,
-				defaultOutgoing: defaultOutgoing || 0,
-			});
+		const reload = () => setData(readBudget());
+		window.addEventListener('budgeteer-data-changed', reload);
+		window.addEventListener('storage', reload);
+		return () => {
+			window.removeEventListener('budgeteer-data-changed', reload);
+			window.removeEventListener('storage', reload);
 		};
+	}, []);
 
-		fetchData(transformData, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}.json`,
-		});
-	}, [year, month]);
+	const monthData = data.budget?.[year]?.[month] || {};
+	const budgetSettings = {
+		income: monthData.income ?? data.defaultIncome ?? 0,
+		outgoing: monthData.outgoing ?? data.defaultOutgoing ?? 0,
+		defaultIncome: data.defaultIncome ?? 0,
+		defaultOutgoing: data.defaultOutgoing ?? 0,
+	};
 
-	// add transactions handler
-	const handlerAddTransaction = (year, month, data) => {
-		authCtx.authorize();
+	const persist = next => {
+		saveBudget(next);
+		setData(next);
+	};
 
-		const getId = res => {
-			const newTransaction = {
-				[res.name]: { name: data.name, value: data.value },
-			};
+	const updateMonth = updater => {
+		const next = structuredClone(readBudget());
+		next.budget ||= {};
+		next.budget[year] ||= {};
+		next.budget[year][month] = updater(next.budget[year][month] || {});
+		persist(next);
+	};
 
-			const updatedBudget = { ...budgetData };
-			if (updatedBudget.transactions) {
-				Object.assign(updatedBudget.transactions, newTransaction);
-			} else {
-				updatedBudget.transactions = newTransaction;
-			}
-			setBudgetData(updatedBudget);
-		};
-
-		fetchDataAdd(getId, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}/budget/${year}/${month}/transactions.json`,
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
+	const addTransaction = (_year, _month, transaction) =>
+		updateMonth(current => ({
+			...current,
+			transactions: {
+				...current.transactions,
+				[crypto.randomUUID()]: transaction,
 			},
-			body: { ...data },
-		});
-	};
+		}));
 
-	// remove transaction handler
-	const handlerRemoveTransaction = id => {
-		fetchDataRemove(null, {
-			url: `REMOVED_FIREBASE_DATABASE_URL://removed-firebase-host.invalid/budgeteer/${authCtx.userId}/budget/${year}/${month}/transactions/${id}.json`,
-			method: 'DELETE',
+	const removeTransaction = id =>
+		updateMonth(current => {
+			const transactions = { ...current.transactions };
+			delete transactions[id];
+			return { ...current, transactions };
 		});
 
-		const updatedBudget = { ...budgetData };
-		delete updatedBudget.transactions[id];
-		setBudgetData(updatedBudget);
-	};
+	const updateAmounts = (income, outgoing) =>
+		updateMonth(current => ({ ...current, income, outgoing }));
+
+	const years = [
+		...new Set([
+			...Array.from({ length: 11 }, (_, i) =>
+				String(today.getFullYear() - 5 + i),
+			),
+			year,
+			...Object.keys(data.budget || {}),
+		]),
+	].sort((a, b) => Number(b) - Number(a));
 
 	return (
 		<Page
@@ -120,34 +83,24 @@ const Budget = () => {
 					title: <IoSettingsOutline />,
 					style: 'icon',
 				},
-				{
-					type: 'link',
-					url: '/logout',
-					title: <AiOutlineLogout />,
-					style: 'icon',
-				},
 			]}
 		>
 			<BudgetForm
-				addTransaction={handlerAddTransaction}
-				budgetPeriods={budgetPeriods}
+				addTransaction={addTransaction}
+				updateAmounts={updateAmounts}
+				budgetPeriods={years}
 				budgetSettings={budgetSettings}
 				setYear={setYear}
 				setMonth={setMonth}
 				currYear={year}
 				currMonth={month}
-				budgetData={budgetData}
+				budgetData={monthData}
 			/>
-			{isLoading ? (
-				'Loading data...'
-			) : (
-				<BudgetList
-					budgetData={budgetData}
-					removeTransaction={handlerRemoveTransaction}
-				/>
-			)}
+			<BudgetList
+				budgetData={monthData}
+				removeTransaction={removeTransaction}
+			/>
 		</Page>
 	);
 };
-
 export default Budget;

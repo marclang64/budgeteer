@@ -1,4 +1,4 @@
-# Budgeteer — standalone demo
+# Budgeteer - standalone demo
 
 A browser-only version of the original 2023 Budgeteer budgeting app created for Harvard's CS50. No Firebase or account is required.
 

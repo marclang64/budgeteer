@@ -1,4 +1,4 @@
-# Budgeteer — standalone portfolio demo
+# Budgeteer — standalone demo
 
 A browser-only version of the original 2023 Budgeteer budgeting app created for Harvard's CS50. No Firebase or account is required.
 
@@ -15,7 +15,7 @@ Budgets and settings are saved to your browser's `localStorage` (`budgeteer-demo
 
 ## Features
 
-- Monthly budgets and expenses, with decimal amounts
+- Monthly budgets and expenses
 - Per-month income and expense overrides
 - Default income and expense settings
 - Year/month navigation and delete transactions
@@ -28,11 +28,7 @@ npm run build
 npm run preview
 ```
 
-The original Git history can be retained by committing this version as a new commit.
-
 ## Tests
-
-The old greeting/async starter tests have been replaced with Budgeteer-specific Vitest and React Testing Library tests.
 
 ```bash
 npm ci
